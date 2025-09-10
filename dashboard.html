@@ -104,14 +104,14 @@
 
       if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
         await auth0Client.handleRedirectCallback();
-        window.history.replaceState({}, document.title, "dashboard");
+        window.history.replaceState({}, document.title, "https://therealduckers.github.io/PracticeBase/dashboard");
       }
 
       const isAuthenticated = await auth0Client.isAuthenticated();
 
       if (!isAuthenticated) {
         await auth0Client.loginWithRedirect({
-          redirect_uri: window.location.origin + "dashboard"
+          redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard"
         });
         return;
       }
