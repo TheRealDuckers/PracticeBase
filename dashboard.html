@@ -1,168 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
   <title>PracticeBase Dashboard</title>
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: #f4f4f4;
-      padding: 2rem;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 0.5rem;
-    }
-    .user-info {
-      font-weight: bold;
-      color: #1abc9c;
-      margin-bottom: 2rem;
-    }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    .card {
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: scale(1.03);
-    }
-    .card a {
-      text-decoration: none;
-      color: #2c3e50;
-      font-weight: bold;
-    }
-    .section-label {
-      margin-top: 2rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #34495e;
-    }
-    button {
-      margin-top: 2rem;
-      padding: 0.5rem 1rem;
-      background-color: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #c0392b;
-    }
-    #loadingScreen {
-      font-size: 1.2rem;
-      color: #888;
-    }
-  </style>
 </head>
 <body>
+  <h1>Welcome to PracticeBase</h1>
+  <div id="profile"></div>
 
-  <div id="loadingScreen">Authenticating...</div>
-
-  <div id="dashboard" style="display:none;">
-    <h1>🎭 Welcome to PracticeBase</h1>
-    <div class="user-info" id="userInfo">Loading...</div>
-
-    <div class="section-label">Your Rehearsal Tools</div>
-    <div class="card-grid" id="cardGrid">
-      <div class="card"><a href="music.html">🎵 Music</a></div>
-      <div class="card"><a href="choreography.html">💃 Choreography</a></div>
-      <div class="card"><a href="script.html">📖 Script</a></div>
-    </div>
-
-    <div class="section-label" id="creativeLabel" style="display:none;">Creative Tools</div>
-    <div class="card-grid" id="creativeGrid" style="display:none;">
-      <div class="card"><a href="trackshare.html">🔗 TrackShare</a></div>
-      <div class="card"><a href="announcements.html">📣 Announcements</a></div>
-      <div class="card"><a href="calendar.html">📅 Rehearsal Calendar</a></div>
-    </div>
-
-    <button id="logout">Logout</button>
-  </div>
-  
-<script src="https://cdn.auth0.com/js/auth0-spa-js/1.22/auth0-spa-js.production.js"></script>
-  
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
   <script>
-    const authConfig = {
-      domain: "dev-u02qa30kbpey0ouq.us.auth0.com",
-      client_id: "RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz"
-    };
+    (async () => {
+      const auth0 = await createAuth0Client({
+        domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
+        client_id: 'RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz',
+        redirect_uri: window.location.origin
+      });
 
-    let auth0Client;
-
-  window.onload = async () => {
-    console.log("Initializing Auth0...");
-    try {
-      auth0Client = await createAuth0Client(authConfig);
-      console.log("Auth0 initialized");
-      console.log("Auth0 SDK loaded:", typeof createAuth0Client);
-
-
-      // Handle redirect callback after login
-      if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
-        console.log("Handling redirect callback...");
-        await auth0Client.handleRedirectCallback();
-        window.history.replaceState({}, document.title, "/dashboard");
+      // Handle redirect callback if returning from Auth0
+      if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+        await auth0.handleRedirectCallback();
+        window.history.replaceState({}, document.title, '/dashboard.html');
       }
 
-      const isAuthenticated = await auth0Client.isAuthenticated();
-      console.log("Authenticated:", isAuthenticated);
+      const isAuthenticated = await auth0.isAuthenticated();
 
       if (!isAuthenticated) {
-        console.log("User not authenticated, redirecting to login...");
-        await auth0Client.loginWithRedirect({
-          redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard.html"
-        });
+        // Redirect to login if not authenticated
+        await auth0.loginWithRedirect();
         return;
       }
 
-      // Show dashboard
-      document.getElementById("loadingScreen").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
+      // If authenticated, show user profile
+      const user = await auth0.getUser();
+      document.getElementById('profile').innerHTML = `
+        <p>Logged in as: ${user.name}</p>
+        <p>Email: ${user.email}</p>
+        <button onclick="logout()">Log Out</button>
+      `;
 
-      // Get user info and roles
-      const user = await auth0Client.getUser();
-      const tokenClaims = await auth0Client.getIdTokenClaims();
-      const roles = tokenClaims["https://practicebase.app/claims/roles"] || [];
-
-      const isCreative = roles.includes("creative");
-      const isCast = roles.includes("cast");
-
-      console.log("User:", user.email);
-      console.log("Roles:", roles);
-
-      document.getElementById("userInfo").textContent = `${user.email} (${isCreative ? "Creative Team" : "Cast Member"})`;
-
-      if (isCreative) {
-        document.getElementById("creativeLabel").style.display = "block";
-        document.getElementById("creativeGrid").style.display = "grid";
-      }
-
-      // Logout button
-      document.getElementById("logout").addEventListener("click", async () => {
-        console.log("Logging out...");
-        await auth0Client.logout({
-          returnTo: "https://therealduckers.github.io/PracticeBase/login"
-        });
-      });
-
-    } catch (err) {
-      console.error("Auth0 error:", err);
-      document.getElementById("loadingScreen").textContent = "Authentication failed. Please refresh or try again.";
-    }
-  };
-</script>
-
+      window.logout = () => {
+        auth0.logout({ returnTo: window.location.origin });
+      };
+    })();
+  </script>
 </body>
 </html>
