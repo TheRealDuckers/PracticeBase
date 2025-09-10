@@ -102,6 +102,11 @@
     window.onload = async () => {
       auth0Client = await createAuth0Client(authConfig);
 
+      console.log("Initializing Auth0...");
+auth0Client = await createAuth0Client(authConfig);
+console.log("Auth0 initialized");
+
+
       if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
         await auth0Client.handleRedirectCallback();
         window.history.replaceState({}, document.title, "dashboard");
