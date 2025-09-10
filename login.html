@@ -47,7 +47,7 @@
     const authConfig = {
       domain: "dev-u02qa30kbpey0ouq.us.auth0.com",
       client_id: "RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz",
-      redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard",
+      redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard.html",
     };
 
     let auth0Client;
@@ -57,7 +57,7 @@
 
       const isAuthenticated = await auth0Client.isAuthenticated();
       if (isAuthenticated) {
-        window.location.href = "dashboard";
+        window.location.href = "https://therealduckers.github.io/PracticeBase/dashboard.html";
       }
 
       document.getElementById("login").addEventListener("click", async () => {
