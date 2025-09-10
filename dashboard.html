@@ -81,7 +81,8 @@
     <div class="card"><a href="calendar.html">📅 Rehearsal Calendar</a></div>
   </div>
 
-  <button onclick="logout()">Logout</button>
+  <button id="logout">Logout</button>
+
 
   <script>
     const authConfig = {
@@ -128,6 +129,14 @@
         returnTo: window.location.origin + "/login"
       });
     }
+
+
+    document.getElementById("logout").addEventListener("click", async () => {
+  await auth0Client.logout({
+    returnTo: "https://therealduckers.github.io/PracticeBase/login"
+  });
+});
+
   </script>
 
 </body>
