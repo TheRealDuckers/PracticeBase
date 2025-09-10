@@ -24,7 +24,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 1rem;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
     }
     .card {
@@ -60,30 +60,36 @@
     button:hover {
       background-color: #c0392b;
     }
+    #loadingScreen {
+      font-size: 1.2rem;
+      color: #888;
+    }
   </style>
 </head>
 <body>
 
-  <h1>🎭 Welcome to PracticeBase</h1>
-  <div class="user-info" id="userInfo">Loading...</div>
+  <div id="loadingScreen">Authenticating...</div>
 
-  <div class="section-label">Your Rehearsal Tools</div>
-  <div class="card-grid" id="cardGrid">
-    <div class="card"><a href="music.html">🎵 Music</a></div>
-    <div class="card"><a href="choreography.html">💃 Choreography</a></div>
-    <div class="card"><a href="script.html">📖 Script</a></div>
-    <div class="card"><a href="trackshare.html">🔗 TrackShare</a></div>
+  <div id="dashboard" style="display:none;">
+    <h1>🎭 Welcome to PracticeBase</h1>
+    <div class="user-info" id="userInfo">Loading...</div>
+
+    <div class="section-label">Your Rehearsal Tools</div>
+    <div class="card-grid" id="cardGrid">
+      <div class="card"><a href="music.html">🎵 Music</a></div>
+      <div class="card"><a href="choreography.html">💃 Choreography</a></div>
+      <div class="card"><a href="script.html">📖 Script</a></div>
+    </div>
+
+    <div class="section-label" id="creativeLabel" style="display:none;">Creative Tools</div>
+    <div class="card-grid" id="creativeGrid" style="display:none;">
+      <div class="card"><a href="trackshare.html">🔗 TrackShare</a></div>
+      <div class="card"><a href="announcements.html">📣 Announcements</a></div>
+      <div class="card"><a href="calendar.html">📅 Rehearsal Calendar</a></div>
+    </div>
+
+    <button id="logout">Logout</button>
   </div>
-
-  <div class="section-label" id="creativeLabel" style="display:none;">Creative Tools</div>
-  <div class="card-grid" id="creativeGrid" style="display:none;">
-    <div class="card"><a href="trackshare.html">🔗 TrackShare</a></div>
-    <div class="card"><a href="announcements.html">📣 Announcements</a></div>
-    <div class="card"><a href="calendar.html">📅 Rehearsal Calendar</a></div>
-  </div>
-
-  <button id="logout">Logout</button>
-
 
   <script>
     const authConfig = {
@@ -98,46 +104,41 @@
 
       if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
         await auth0Client.handleRedirectCallback();
-        window.history.replaceState({}, document.title, "/dashboard");
+        window.history.replaceState({}, document.title, "dashboard");
       }
 
       const isAuthenticated = await auth0Client.isAuthenticated();
+
       if (!isAuthenticated) {
         await auth0Client.loginWithRedirect({
-          redirect_uri: window.location.origin + "/dashboard"
+          redirect_uri: window.location.origin + "dashboard"
         });
         return;
       }
+
+      // Show dashboard
+      document.getElementById("loadingScreen").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
 
       const user = await auth0Client.getUser();
       const tokenClaims = await auth0Client.getIdTokenClaims();
       const roles = tokenClaims["https://practicebase.app/claims/roles"] || [];
 
       const isCreative = roles.includes("creative");
-      const isCast = roles.includes("cast");
-
       document.getElementById("userInfo").textContent = `${user.email} (${isCreative ? "Creative Team" : "Cast Member"})`;
 
       if (isCreative) {
         document.getElementById("creativeLabel").style.display = "block";
         document.getElementById("creativeGrid").style.display = "grid";
       }
-    };
 
-    async function logout() {
-      const auth0Client = await createAuth0Client(authConfig);
-      await auth0Client.logout({
-        returnTo: window.location.origin + "/login"
+      // Logout button
+      document.getElementById("logout").addEventListener("click", async () => {
+        await auth0Client.logout({
+          returnTo: "https://therealduckers.github.io/login"
+        });
       });
-    }
-
-
-    document.getElementById("logout").addEventListener("click", async () => {
-  await auth0Client.logout({
-    returnTo: "https://therealduckers.github.io/PracticeBase/login"
-  });
-});
-
+    };
   </script>
 
 </body>
