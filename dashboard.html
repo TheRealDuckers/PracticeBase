@@ -99,19 +99,26 @@
 
     let auth0Client;
 
-    window.onload = async () => {
+  window.onload = async () => {
+    console.log("Initializing Auth0...");
+    try {
       auth0Client = await createAuth0Client(authConfig);
+      console.log("Auth0 initialized");
 
+      // Handle redirect callback after login
       if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+        console.log("Handling redirect callback...");
         await auth0Client.handleRedirectCallback();
-        window.history.replaceState({}, document.title, "https://therealduckers.github.io/PracticeBase/dashboard");
+        window.history.replaceState({}, document.title, "/dashboard");
       }
 
       const isAuthenticated = await auth0Client.isAuthenticated();
+      console.log("Authenticated:", isAuthenticated);
 
       if (!isAuthenticated) {
+        console.log("User not authenticated, redirecting to login...");
         await auth0Client.loginWithRedirect({
-          redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard"
+          redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard.html"
         });
         return;
       }
@@ -120,11 +127,17 @@
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
 
+      // Get user info and roles
       const user = await auth0Client.getUser();
       const tokenClaims = await auth0Client.getIdTokenClaims();
       const roles = tokenClaims["https://practicebase.app/claims/roles"] || [];
 
       const isCreative = roles.includes("creative");
+      const isCast = roles.includes("cast");
+
+      console.log("User:", user.email);
+      console.log("Roles:", roles);
+
       document.getElementById("userInfo").textContent = `${user.email} (${isCreative ? "Creative Team" : "Cast Member"})`;
 
       if (isCreative) {
@@ -134,12 +147,18 @@
 
       // Logout button
       document.getElementById("logout").addEventListener("click", async () => {
+        console.log("Logging out...");
         await auth0Client.logout({
-          returnTo: "https://therealduckers.github.io/login"
+          returnTo: "https://therealduckers.github.io/PracticeBase/login"
         });
       });
-    };
-  </script>
+
+    } catch (err) {
+      console.error("Auth0 error:", err);
+      document.getElementById("loadingScreen").textContent = "Authentication failed. Please refresh or try again.";
+    }
+  };
+</script>
 
 </body>
 </html>
