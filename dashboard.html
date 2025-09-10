@@ -104,6 +104,8 @@
     try {
       auth0Client = await createAuth0Client(authConfig);
       console.log("Auth0 initialized");
+      console.log("Auth0 SDK loaded:", typeof createAuth0Client);
+
 
       // Handle redirect callback after login
       if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
