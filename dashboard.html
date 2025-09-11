@@ -73,6 +73,11 @@
   </div>
   <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
   <script>
+    if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+  await auth0.handleRedirectCallback();
+  window.history.replaceState({}, document.title, '/dashboard.html');
+}
+
     (async () => {
       const auth0 = await createAuth0Client({
         domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
