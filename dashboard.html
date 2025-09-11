@@ -86,7 +86,7 @@
         redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard.html"
       });
       </script>
-  <script>
+  <script type="module">
       // Handle redirect callback if returning from Auth0
       if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
         await auth0.handleRedirectCallback();
