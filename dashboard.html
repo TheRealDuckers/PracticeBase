@@ -3,10 +3,74 @@
 <head>
   <title>PracticeBase Dashboard</title>
 </head>
-<body>
-  <h1>Welcome to PracticeBase</h1>
-  <div id="profile"></div>
+    <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f4f6f8;
+      color: #333;
+    }
 
+    header {
+      background-color: #2d2d2d;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    button {
+      background-color: #ff5c5c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background-color: #e04e4e;
+    }
+
+    .container {
+      padding: 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #2d2d2d;
+    }
+
+    .unauthorized {
+      color: #ff5c5c;
+      font-weight: bold;
+    }
+  </style>
+<body>
+   <header>
+    <h1>PracticeBase</h1>
+    <button onclick="logout()">Log Out</button>
+  </header>
+
+  <div class="container">
+    <div id="content" class="card"></div>
+  </div>
   <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
   <script>
     (async () => {
@@ -37,6 +101,32 @@
         <p>Email: ${user.email}</p>
         <button onclick="logout()">Log Out</button>
       `;
+
+      window.logout = () => {
+        auth0.logout({ returnTo: window.location.origin });
+      };
+    })();
+
+    const token = await auth0.getIdTokenClaims();
+      const roles = token['https://practicebase.app/roles'] || [];
+
+      const content = document.getElementById('content');
+      if (roles.includes('cast')) {
+        content.innerHTML = `
+          <h2>🎭 Cast Dashboard</h2>
+          <p>Welcome! Here’s your rehearsal schedule and script access.</p>
+        `;
+      } else if (roles.includes('creative')) {
+        content.innerHTML = `
+          <h2>🎨 Creative Dashboard</h2>
+          <p>Welcome! Manage production notes and design assets here.</p>
+        `;
+      } else {
+        content.innerHTML = `
+          <h2 class="unauthorized">🔒 Unauthorized</h2>
+          <p>You do not have access to this dashboard.</p>
+        `;
+      }
 
       window.logout = () => {
         auth0.logout({ returnTo: window.location.origin });
