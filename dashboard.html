@@ -65,7 +65,7 @@
 <body>
    <header>
     <h1>PracticeBase</h1>
-    <button onclick="logout()">Log Out</button>
+    <button id="logoutBtn">Log Out</button>
   </header>
 
   <div class="container">
@@ -135,10 +135,10 @@
         `;
       }
 
-      window.logout = () => {
-        auth0.logout({ returnTo: window.location.origin });
-      };
-    })();
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+  auth0.logout({ returnTo: "https://therealduckers.github.io/PracticeBase/login" });
+});
+
   </script>
 </body>
 </html>
