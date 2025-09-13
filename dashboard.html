@@ -138,69 +138,87 @@
     </main>
   </div>
 
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
-  <script>
-    let auth0;
+<script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
+<script>
+  let auth0;
 
-    window.logout = () => {
-      if (auth0) {
-        auth0.logout({ returnTo: window.location.origin });
-      }
-    };
+  // Define logout globally so the button can access it
+  window.logout = () => {
+    if (auth0) {
+      auth0.logout({ returnTo: window.location.origin });
+    }
+  };
 
-    (async () => {
-      auth0 = await createAuth0Client({
-        domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
-        client_id: 'RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz',
-        audience: 'https://practicebase.app/api',
-        redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard"
-      });
+  (async () => {
+    // Create Auth0 client with localstorage for better persistence
+    auth0 = await createAuth0Client({
+      domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
+      client_id: 'RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz',
+      audience: 'https://practicebase.app/api',
+      redirect_uri: window.location.origin,
+      cacheLocation: 'localstorage'
+    });
 
-      if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+    // Handle redirect callback if returning from Auth0 login
+    if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
+      try {
         await auth0.handleRedirectCallback();
-        window.history.replaceState({}, document.title, '/dashboard.html');
-      }
-
-      const isAuthenticated = await auth0.isAuthenticated();
-      if (!isAuthenticated) {
-        await auth0.loginWithRedirect();
+        window.history.replaceState({}, document.title, '/practicebase/dashboard.html'); // Adjust path for GitHub Pages
+      } catch (err) {
+        console.error('Redirect callback error:', err);
+        document.getElementById('content').innerHTML = `
+          <h2>⚠️ Login Error</h2>
+          <p>Something went wrong during login. Please try again.</p>
+        `;
         return;
       }
+    }
 
-      const token = await auth0.getIdTokenClaims();
-      const roles = token['https://practicebase.app/roles'] || [];
+    // Check if user is authenticated
+    const isAuthenticated = await auth0.isAuthenticated();
+    if (!isAuthenticated) {
+      await auth0.loginWithRedirect();
+      return;
+    }
 
-      const content = document.getElementById('content');
-      const nav = document.getElementById('navLinks');
+    // Get user token and roles
+    const token = await auth0.getIdTokenClaims();
+    const roles = token['https://practicebase.app/roles'] || [];
 
-      if (roles.includes('cast')) {
-        content.innerHTML = `
-          <h2>🎭 Cast Dashboard</h2>
-          <p>Welcome! Here’s your rehearsal schedule and script access.</p>
-        `;
-        nav.innerHTML = `
-          <li><a href="#">Rehearsals</a></li>
-          <li><a href="#">Scripts</a></li>
-        `;
-      } else if (roles.includes('creative')) {
-        content.innerHTML = `
-          <h2>🎨 Creative Dashboard</h2>
-          <p>Welcome! Manage production notes and design assets here.</p>
-        `;
-        nav.innerHTML = `
-          <li><a href="#">Design Assets</a></li>
-          <li><a href="#">Production Notes</a></li>
-        `;
-      } else {
-        content.innerHTML = `
-          <h2 class="unauthorized">🔒 Unauthorized</h2>
-          <p>You do not have access to this dashboard. Please contact support.</p>
-        `;
-        nav.innerHTML = `<li><a href="#">Home</a></li>`;
-      }
+    const content = document.getElementById('content');
+    const nav = document.getElementById('navLinks');
 
-      document.getElementById('logoutBtn').addEventListener('click', logout);
-    })();
-  </script>
+    // Role-based rendering
+    if (roles.includes('cast')) {
+      content.innerHTML = `
+        <h2>🎭 Cast Dashboard</h2>
+        <p>Welcome! Here’s your rehearsal schedule and script access.</p>
+      `;
+      nav.innerHTML = `
+        <li><a href="#">Rehearsals</a></li>
+        <li><a href="#">Scripts</a></li>
+      `;
+    } else if (roles.includes('creative')) {
+      content.innerHTML = `
+        <h2>🎨 Creative Dashboard</h2>
+        <p>Welcome! Manage production notes and design assets here.</p>
+      `;
+      nav.innerHTML = `
+        <li><a href="#">Design Assets</a></li>
+        <li><a href="#">Production Notes</a></li>
+      `;
+    } else {
+      content.innerHTML = `
+        <h2 class="unauthorized">🔒 Unauthorized</h2>
+        <p>You do not have access to this dashboard. Please contact support.</p>
+      `;
+      nav.innerHTML = `<li><a href="#">Home</a></li>`;
+    }
+
+    // Attach logout button listener
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+  })();
+</script>
+
 </body>
 </html>
