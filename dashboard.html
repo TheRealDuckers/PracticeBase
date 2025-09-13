@@ -189,7 +189,7 @@
     const nav = document.getElementById('navLinks');
 
     // Role-based rendering
-    if (roles.includes('cast')) {
+    if (roles.includes('Cast')) {
       content.innerHTML = `
         <h2>🎭 Cast Dashboard</h2>
         <p>Welcome! Here’s your rehearsal schedule and script access.</p>
@@ -198,7 +198,7 @@
         <li><a href="#">Rehearsals</a></li>
         <li><a href="#">Scripts</a></li>
       `;
-    } else if (roles.includes('creative')) {
+    } else if (roles.includes('Creative')) {
       content.innerHTML = `
         <h2>🎨 Creative Dashboard</h2>
         <p>Welcome! Manage production notes and design assets here.</p>
