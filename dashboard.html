@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PracticeBase Dashboard</title>
-</head>
-    <style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --text: #333;
+      --sidebar-bg: #2d2d2d;
+      --accent: #ff5c5c;
+    }
+
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: #f4f6f8;
-      color: #333;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     header {
-      background-color: #2d2d2d;
+      background-color: var(--sidebar-bg);
       color: white;
       padding: 1rem 2rem;
       display: flex;
@@ -26,7 +38,7 @@
     }
 
     button {
-      background-color: #ff5c5c;
+      background-color: var(--accent);
       color: white;
       border: none;
       padding: 0.5rem 1rem;
@@ -39,8 +51,44 @@
       background-color: #e04e4e;
     }
 
-    .container {
+    .dashboard {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      background-color: var(--sidebar-bg);
+      color: white;
+      width: 220px;
+      padding: 1rem;
+      flex-shrink: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      margin-bottom: 0.8rem;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .main {
+      flex: 1;
       padding: 2rem;
+      overflow-y: auto;
     }
 
     .card {
@@ -48,97 +96,111 @@
       border-radius: 8px;
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 600px;
-      margin: 2rem auto;
+      max-width: 700px;
+      margin: 0 auto;
     }
 
     .card h2 {
       margin-top: 0;
-      color: #2d2d2d;
     }
 
     .unauthorized {
-      color: #ff5c5c;
+      color: var(--accent);
       font-weight: bold;
     }
+
+    @media (max-width: 768px) {
+      .dashboard {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        padding: 1rem 2rem;
+      }
+    }
   </style>
+</head>
 <body>
-   <header>
+  <header>
     <h1>PracticeBase</h1>
     <button id="logoutBtn">Log Out</button>
   </header>
 
-  <div class="container">
-    <div id="content" class="card"></div>
+  <div class="dashboard">
+    <nav class="sidebar" id="sidebar">
+      <h2>Navigation</h2>
+      <ul id="navLinks"></ul>
+    </nav>
+
+    <main class="main">
+      <div id="content" class="card">Loading dashboard...</div>
+    </main>
   </div>
+
   <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
   <script>
-    if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
-  await auth0.handleRedirectCallback();
-  window.history.replaceState({}, document.title, '/dashboard.html');
-}
+    let auth0;
 
-    <script>
+    window.logout = () => {
+      if (auth0) {
+        auth0.logout({ returnTo: window.location.origin });
+      }
+    };
+
     (async () => {
-      const auth0 = await createAuth0Client({
+      auth0 = await createAuth0Client({
         domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
         client_id: 'RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz',
-        redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard.html"
+        audience: 'https://practicebase.app/api',
+        redirect_uri: "https://therealduckers.github.io/PracticeBase/dashboard"
       });
-      </script>
-  <script type="module">
-      // Handle redirect callback if returning from Auth0
+
       if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
         await auth0.handleRedirectCallback();
         window.history.replaceState({}, document.title, '/dashboard.html');
       }
 
       const isAuthenticated = await auth0.isAuthenticated();
-
       if (!isAuthenticated) {
-        // Redirect to login if not authenticated
         await auth0.loginWithRedirect();
         return;
       }
 
-      // If authenticated, show user profile
-      const user = await auth0.getUser();
-      document.getElementById('profile').innerHTML = `
-        <p>Logged in as: ${user.name}</p>
-        <p>Email: ${user.email}</p>
-        <button onclick="logout()">Log Out</button>
-      `;
-
-      window.logout = () => {
-        auth0.logout({ returnTo: window.location.origin });
-      };
-    })();
-
-    const token = await auth0.getIdTokenClaims();
+      const token = await auth0.getIdTokenClaims();
       const roles = token['https://practicebase.app/roles'] || [];
 
       const content = document.getElementById('content');
+      const nav = document.getElementById('navLinks');
+
       if (roles.includes('cast')) {
         content.innerHTML = `
           <h2>🎭 Cast Dashboard</h2>
           <p>Welcome! Here’s your rehearsal schedule and script access.</p>
+        `;
+        nav.innerHTML = `
+          <li><a href="#">Rehearsals</a></li>
+          <li><a href="#">Scripts</a></li>
         `;
       } else if (roles.includes('creative')) {
         content.innerHTML = `
           <h2>🎨 Creative Dashboard</h2>
           <p>Welcome! Manage production notes and design assets here.</p>
         `;
+        nav.innerHTML = `
+          <li><a href="#">Design Assets</a></li>
+          <li><a href="#">Production Notes</a></li>
+        `;
       } else {
         content.innerHTML = `
           <h2 class="unauthorized">🔒 Unauthorized</h2>
-          <p>You do not have access to this dashboard.</p>
+          <p>You do not have access to this dashboard. Please contact support.</p>
         `;
+        nav.innerHTML = `<li><a href="#">Home</a></li>`;
       }
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-  auth0.logout({ returnTo: "https://therealduckers.github.io/PracticeBase/login" });
-});
-
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+    })();
   </script>
 </body>
 </html>
