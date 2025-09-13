@@ -142,54 +142,51 @@
 <script>
   let auth0;
 
-  // Define logout globally so the button can access it
   window.logout = () => {
     if (auth0) {
-      auth0.logout({ returnTo: window.location.origin });
+      auth0.logout({
+        returnTo: 'https://yourusername.github.io/practicebase/' // ✅ GitHub Pages logout path
+      });
     }
   };
 
   (async () => {
-    // Create Auth0 client with localstorage for better persistence
     auth0 = await createAuth0Client({
-      domain: 'dev-u02qa30kbpey0ouq.us.auth0.com',
-      client_id: 'RFOzZm4QqUpgCyWdNW1jftcja6tPCGoz',
+      domain: 'YOUR_DOMAIN',
+      client_id: 'YOUR_CLIENT_ID',
       audience: 'https://practicebase.app/api',
-      redirect_uri: window.location.origin,
+      redirect_uri: 'https://yourusername.github.io/practicebase/dashboard.html', // ✅ GitHub Pages callback
       cacheLocation: 'localstorage'
     });
 
-    // Handle redirect callback if returning from Auth0 login
+    // ✅ Handle redirect callback immediately
     if (window.location.search.includes('code=') && window.location.search.includes('state=')) {
       try {
         await auth0.handleRedirectCallback();
-        window.history.replaceState({}, document.title, '/practicebase/dashboard.html'); // Adjust path for GitHub Pages
+        window.history.replaceState({}, document.title, '/practicebase/dashboard.html');
       } catch (err) {
         console.error('Redirect callback error:', err);
         document.getElementById('content').innerHTML = `
           <h2>⚠️ Login Error</h2>
-          <p>Something went wrong during login. Please try again.</p>
+          <p>Something went wrong during login. Please refresh or try again.</p>
         `;
         return;
       }
     }
 
-    // Check if user is authenticated
     const isAuthenticated = await auth0.isAuthenticated();
     if (!isAuthenticated) {
       await auth0.loginWithRedirect();
       return;
     }
 
-    // Get user token and roles
     const token = await auth0.getIdTokenClaims();
     const roles = token['https://practicebase.app/roles'] || [];
 
     const content = document.getElementById('content');
     const nav = document.getElementById('navLinks');
 
-    // Role-based rendering
-    if (roles.includes('Cast')) {
+    if (roles.includes('cast')) {
       content.innerHTML = `
         <h2>🎭 Cast Dashboard</h2>
         <p>Welcome! Here’s your rehearsal schedule and script access.</p>
@@ -198,7 +195,7 @@
         <li><a href="#">Rehearsals</a></li>
         <li><a href="#">Scripts</a></li>
       `;
-    } else if (roles.includes('Creative')) {
+    } else if (roles.includes('creative')) {
       content.innerHTML = `
         <h2>🎨 Creative Dashboard</h2>
         <p>Welcome! Manage production notes and design assets here.</p>
@@ -215,7 +212,6 @@
       nav.innerHTML = `<li><a href="#">Home</a></li>`;
     }
 
-    // Attach logout button listener
     document.getElementById('logoutBtn').addEventListener('click', logout);
   })();
 </script>
